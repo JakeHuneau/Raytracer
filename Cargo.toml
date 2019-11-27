@@ -1,0 +1,8 @@
+[package]
+name = "raytrace"
+version = "0.1.0"
+authors = ["JakeHuneau <jakehuneau@yahoo.com>"]
+edition = "2018"
+
+[dependencies]
+image = "0.21.0"
