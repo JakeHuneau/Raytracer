@@ -7,8 +7,8 @@ pub struct Vector3D {
 }
 
 impl Vector3D {
-    pub fn new(x: f32, y: f32, z: f32) -> Vector3D {
-        Vector3D { e: [x, y, z] }
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { e: [x, y, z] }
     }
 
     pub fn x(&self) -> f32 {
@@ -54,8 +54,8 @@ impl Vector3D {
         self.e[0] * v2.e[0] + self.e[1] * v2.e[1] + self.e[2] * v2.e[2]
     }
 
-    pub fn cross(&self, v2: &Vector3D) -> Vector3D {
-        Vector3D {
+    pub fn cross(&self, v2: &Vector3D) -> Self {
+        Self {
             e: [
                 self.e[1] * v2.e[2] - self.e[2] * v2.e[1],
                 -(self.e[0] * v2.e[2] - self.e[2] * v2.e[0]),
@@ -66,10 +66,10 @@ impl Vector3D {
 }
 
 impl Add for Vector3D {
-    type Output = Vector3D;
+    type Output = Self;
 
-    fn add(self, v2: Vector3D) -> Vector3D {
-        Vector3D {
+    fn add(self, v2: Vector3D) -> Self {
+        Self {
             e: [
                 self.e[0] + v2.e[0],
                 self.e[1] + v2.e[1],
@@ -80,10 +80,10 @@ impl Add for Vector3D {
 }
 
 impl Sub for Vector3D {
-    type Output = Vector3D;
+    type Output = Self;
 
-    fn sub(self, v2: Vector3D) -> Vector3D {
-        Vector3D {
+    fn sub(self, v2: Vector3D) -> Self {
+        Self {
             e: [
                 self.e[0] - v2.e[0],
                 self.e[1] - v2.e[1],
@@ -94,10 +94,10 @@ impl Sub for Vector3D {
 }
 
 impl Mul<Vector3D> for Vector3D {
-    type Output = Vector3D;
+    type Output = Self;
 
-    fn mul(self, v2: Vector3D) -> Vector3D {
-        Vector3D {
+    fn mul(self, v2: Vector3D) -> Self {
+        Self {
             e: [
                 self.e[0] * v2.e[0],
                 self.e[1] * v2.e[1],
@@ -108,20 +108,20 @@ impl Mul<Vector3D> for Vector3D {
 }
 
 impl Mul<f32> for Vector3D {
-    type Output = Vector3D;
+    type Output = Self;
 
-    fn mul(self, c: f32) -> Vector3D {
-        Vector3D {
+    fn mul(self, c: f32) -> Self {
+        Self {
             e: [self.e[0] * c, self.e[1] * c, self.e[2] * c],
         }
     }
 }
 
 impl Div<Vector3D> for Vector3D {
-    type Output = Vector3D;
+    type Output = Self;
 
-    fn div(self, v2: Vector3D) -> Vector3D {
-        Vector3D {
+    fn div(self, v2: Vector3D) -> Self {
+        Self {
             e: [
                 self.e[0] / v2.e[0],
                 self.e[1] / v2.e[1],
@@ -132,20 +132,20 @@ impl Div<Vector3D> for Vector3D {
 }
 
 impl Div<f32> for Vector3D {
-    type Output = Vector3D;
+    type Output = Self;
 
-    fn div(self, c: f32) -> Vector3D {
-        Vector3D {
+    fn div(self, c: f32) -> Self {
+        Self {
             e: [self.e[0] / c, self.e[1] / c, self.e[2] / c],
         }
     }
 }
 
 impl Neg for Vector3D {
-    type Output = Vector3D;
+    type Output = Self;
 
-    fn neg(self) -> Vector3D {
-        Vector3D {
+    fn neg(self) -> Self {
+        Self {
             e: [-self.e[0], -self.e[1], -self.e[2]],
         }
     }
