@@ -19,7 +19,7 @@ impl Ray {
     }
 
     pub fn direction(&self) -> Vector3D {
-        self.a
+        self.b
     }
 
     pub fn point_at_parameter(&self, t: f32) -> Vector3D {
@@ -30,6 +30,15 @@ impl Ray {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_constructor() {
+        let v1 = Vector3D { e: [1.0, 1.0, 1.0] };
+        let v2 = Vector3D { e: [2.0, 2.0, 2.0] };
+        let ray = Ray::new(&v1, &v2);
+        assert_eq!(ray.origin(), v1);
+        assert_eq!(ray.direction(), v2);
+    }
 
     #[test]
     fn test_point_at_parameter() {
