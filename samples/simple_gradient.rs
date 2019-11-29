@@ -24,8 +24,8 @@ fn main() {
 
     for j in (0..ppm.height-1).rev() {
         for i in 0..ppm.width {
-            let u = (i as f32) / (ppm.height as f32);
-            let v = (j as f32) / (ppm.width as f32);
+            let u = (i as f32) / (ppm.width as f32);
+            let v = (j as f32) / (ppm.height as f32);
             let dest = lower_left_corner + horizontal * u + vertical * v;
             let r = Ray::new(&origin, &dest);
             let col = color(&r);
