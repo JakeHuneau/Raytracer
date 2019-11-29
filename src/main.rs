@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use raytrace::ppm::PPM;
 use raytrace::ray::Ray;
 use raytrace::vector3d::{unit_vector, Vector3D};
@@ -27,9 +29,9 @@ pub fn color(r: &Ray) -> Vector3D {
                 - Vector3D {
                     e: [0.0, 0.0, -1.0],
                 };
-            let N = unit_vector(&d);
+            let normal = unit_vector(&d);
             Vector3D {
-                e: [N.x() + 1.0, N.y() + 1.0, N.z() + 1.0],
+                e: [normal.x() + 1.0, normal.y() + 1.0, normal.z() + 1.0],
             } * 0.5
         }
         false => {
@@ -45,8 +47,9 @@ pub fn color(r: &Ray) -> Vector3D {
 }
 
 fn main() {
+    let start = SystemTime::now();
     let filename = "out.ppm";
-    let mut ppm = PPM::new(&filename, 100, 200, 256);
+    let mut ppm = PPM::new(&filename, 500, 1000, 256);
 
     let lower_left_corner = Vector3D {
         e: [-2.0, -1.0, -1.0],
@@ -71,4 +74,5 @@ fn main() {
             ppm.write_row(&v1);
         }
     }
+    println!("Finished in {} ms", start.elapsed().unwrap().as_millis());
 }
