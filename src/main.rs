@@ -1,47 +1,26 @@
+use std::f32;
 use std::time::SystemTime;
 
-use raytrace::ppm::PPM;
-use raytrace::ray::Ray;
-use raytrace::vector3d::{unit_vector, Vector3D};
+use raytrace::shapes::hitable::{HitRecord, Hitable, HitableList};
+use raytrace::shapes::sphere::Sphere;
+use raytrace::util::ppm::PPM;
+use raytrace::util::ray::Ray;
+use raytrace::util::vector3d::{unit_vector, Vector3D};
 
-pub fn hit_sphere(center: &Vector3D, radius: f32, r: &Ray) -> f32 {
-    let oc = r.origin() - *center;
-    let a = r.direction().dot(&r.direction());
-    let b = oc.dot(&r.direction()) * 2.0;
-    let c = oc.dot(&oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    let res = discriminant < 0.0;
-    match res {
-        true => -1.0,
-        false => (-b - discriminant.sqrt()) / (2.0 * a),
-    }
-}
-
-pub fn color(r: &Ray) -> Vector3D {
-    let center = Vector3D {
-        e: [0.0, 0.0, -1.0],
-    };
-    let t = hit_sphere(&center, 0.5, &r);
-    let res = t > 0.0;
-    match res {
+pub fn color(r: &Ray, world: &Hitable) -> Vector3D {
+    let mut rec = HitRecord::new();
+    match world.hit(&r, 0., f32::MAX, &mut rec) {
         true => {
-            let d = r.point_at_parameter(t)
-                - Vector3D {
-                    e: [0.0, 0.0, -1.0],
-                };
-            let normal = unit_vector(&d);
-            Vector3D {
-                e: [normal.x() + 1.0, normal.y() + 1.0, normal.z() + 1.0],
-            } * 0.5
+            Vector3D::new(
+                rec.normal.x() + 1.,
+                rec.normal.y() + 1.,
+                rec.normal.z() + 1.,
+            ) / 2.
         }
         false => {
-            let direction = r.direction();
-            let unit_direction = unit_vector(&direction);
-
-            let t: f32 = 0.5 * (unit_direction.y() + 1.0);
-            let v1 = Vector3D { e: [1.0, 1.0, 1.0] } * (1.0 - t);
-            let v2 = Vector3D { e: [0.5, 0.7, 1.0] } * t;
-            v1 + v2
+            let unit_direction = unit_vector(&r.direction());
+            let t = (unit_direction.y() + 1.) / 2.;
+            Vector3D::new(1., 1., 1.) * (1. - t) + Vector3D::new(0.5, 0.7, 1.) * t
         }
     }
 }
@@ -58,13 +37,17 @@ fn main() {
     let vertical = Vector3D { e: [0.0, 2.0, 0.0] };
     let origin = Vector3D { e: [0.0, 0.0, 0.0] };
 
+    let s1 = Box::new(Sphere::new(Vector3D::new(0., 0., -1.), 0.5));
+    let s2 = Box::new(Sphere::new(Vector3D::new(0., -100.5, -1.), 100.));
+    let world = HitableList::new(vec![s1, s2]);
+
     for j in (0..ppm.height - 1).rev() {
         for i in 0..ppm.width {
             let u = (i as f32) / (ppm.width as f32);
             let v = (j as f32) / (ppm.height as f32);
             let dest = lower_left_corner + horizontal * u + vertical * v;
             let r = Ray::new(&origin, &dest);
-            let col = color(&r);
+            let col = color(&r, &world);
 
             let v1 = [
                 (ppm.max as f32 * col.e[0]) as u32,

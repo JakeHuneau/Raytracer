@@ -1,3 +1,2 @@
-pub mod vector3d;
-pub mod ray;
-pub mod ppm;
+pub mod util;
+pub mod shapes;
