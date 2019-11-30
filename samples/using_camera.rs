@@ -3,10 +3,10 @@ use std::time::SystemTime;
 
 use raytrace::shapes::hitable::{HitRecord, Hitable, HitableList};
 use raytrace::shapes::sphere::Sphere;
-use raytrace::util::camera::Camera;
 use raytrace::util::ppm::PPM;
 use raytrace::util::ray::Ray;
 use raytrace::util::vector3d::{unit_vector, Vector3D};
+use raytrace::util::camera::Camera;
 
 pub fn color(r: &Ray, world: &Hitable) -> Vector3D {
     let mut rec = HitRecord::new();
