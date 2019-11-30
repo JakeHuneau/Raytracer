@@ -7,6 +7,7 @@ use raytrace::util::camera::Camera;
 use raytrace::util::ppm::PPM;
 use raytrace::util::ray::Ray;
 use raytrace::util::vector3d::{unit_vector, Vector3D};
+use raytrace::util::random::rand_num;
 
 pub fn color(r: &Ray, world: &Hitable) -> Vector3D {
     let mut rec = HitRecord::new();
@@ -46,8 +47,8 @@ fn main() {
         for i in 0..ppm.width {
             let mut col = Vector3D::new(0., 0., 0.);
             for _ in 0..ns {
-                let u = (i as f32) / (ppm.width as f32);
-                let v = (j as f32) / (ppm.height as f32);
+                let u = (i as f32 + rand_num()) / (ppm.width as f32);
+                let v = (j as f32 + rand_num()) / (ppm.height as f32);
                 let r = cam.get_ray(u, v);
                 col += color(&r, &world);
             }
