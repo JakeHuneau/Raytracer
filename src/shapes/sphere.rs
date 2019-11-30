@@ -1,4 +1,5 @@
 use super::hitable::{HitRecord, Hitable};
+use crate::util::random::rand_num;
 use crate::util::ray::Ray;
 use crate::util::vector3d::Vector3D;
 
@@ -43,6 +44,15 @@ impl Hitable for Sphere {
                 return false;
             }
             false => false,
+        }
+    }
+}
+
+pub fn random_in_unit_sphere() -> Vector3D {
+    loop {
+        let p = Vector3D::new(rand_num(), rand_num(), rand_num()) * 2. - Vector3D::new(1., 1., 1.);
+        if p.squared_length() >= 1. {
+            return p;
         }
     }
 }
