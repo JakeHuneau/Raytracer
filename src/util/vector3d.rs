@@ -55,13 +55,11 @@ impl Vector3D {
     }
 
     pub fn cross(&self, v2: &Vector3D) -> Self {
-        Self {
-            e: [
-                self.e[1] * v2.e[2] - self.e[2] * v2.e[1],
-                -(self.e[0] * v2.e[2] - self.e[2] * v2.e[0]),
-                self.e[0] * v2.e[1] - self.e[1] * v2.e[0],
-            ],
-        }
+        Self::new(
+            self.e[1] * v2.e[2] - self.e[2] * v2.e[1],
+            -(self.e[0] * v2.e[2] - self.e[2] * v2.e[0]),
+            self.e[0] * v2.e[1] - self.e[1] * v2.e[0],
+        )
     }
 }
 
@@ -69,13 +67,11 @@ impl Add for Vector3D {
     type Output = Self;
 
     fn add(self, v2: Vector3D) -> Self {
-        Self {
-            e: [
-                self.e[0] + v2.e[0],
-                self.e[1] + v2.e[1],
-                self.e[2] + v2.e[2],
-            ],
-        }
+        Self::new(
+            self.e[0] + v2.e[0],
+            self.e[1] + v2.e[1],
+            self.e[2] + v2.e[2],
+        )
     }
 }
 
@@ -83,13 +79,11 @@ impl Sub for Vector3D {
     type Output = Self;
 
     fn sub(self, v2: Vector3D) -> Self {
-        Self {
-            e: [
-                self.e[0] - v2.e[0],
-                self.e[1] - v2.e[1],
-                self.e[2] - v2.e[2],
-            ],
-        }
+        Self::new(
+            self.e[0] - v2.e[0],
+            self.e[1] - v2.e[1],
+            self.e[2] - v2.e[2],
+        )
     }
 }
 
@@ -97,13 +91,11 @@ impl Mul<Vector3D> for Vector3D {
     type Output = Self;
 
     fn mul(self, v2: Vector3D) -> Self {
-        Self {
-            e: [
-                self.e[0] * v2.e[0],
-                self.e[1] * v2.e[1],
-                self.e[2] * v2.e[2],
-            ],
-        }
+        Self::new(
+            self.e[0] * v2.e[0],
+            self.e[1] * v2.e[1],
+            self.e[2] * v2.e[2],
+        )
     }
 }
 
@@ -111,9 +103,7 @@ impl Mul<f32> for Vector3D {
     type Output = Self;
 
     fn mul(self, c: f32) -> Self {
-        Self {
-            e: [self.e[0] * c, self.e[1] * c, self.e[2] * c],
-        }
+        Self::new(self.e[0] * c, self.e[1] * c, self.e[2] * c)
     }
 }
 
@@ -121,13 +111,11 @@ impl Div<Vector3D> for Vector3D {
     type Output = Self;
 
     fn div(self, v2: Vector3D) -> Self {
-        Self {
-            e: [
-                self.e[0] / v2.e[0],
-                self.e[1] / v2.e[1],
-                self.e[2] / v2.e[2],
-            ],
-        }
+        Self::new(
+            self.e[0] / v2.e[0],
+            self.e[1] / v2.e[1],
+            self.e[2] / v2.e[2],
+        )
     }
 }
 
@@ -135,9 +123,7 @@ impl Div<f32> for Vector3D {
     type Output = Self;
 
     fn div(self, c: f32) -> Self {
-        Self {
-            e: [self.e[0] / c, self.e[1] / c, self.e[2] / c],
-        }
+        Self::new(self.e[0] / c, self.e[1] / c, self.e[2] / c)
     }
 }
 
@@ -145,9 +131,7 @@ impl Neg for Vector3D {
     type Output = Self;
 
     fn neg(self) -> Self {
-        Self {
-            e: [-self.e[0], -self.e[1], -self.e[2]],
-        }
+        Self::new(-self.e[0], -self.e[1], -self.e[2])
     }
 }
 
@@ -221,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_component_getters() {
-        let v = Vector3D { e: [1.0, 2.0, 3.0] };
+        let v = Vector3D::new(1., 2., 3.);
         assert_eq!(v.x(), 1.0);
         assert_eq!(v.y(), 2.0);
         assert_eq!(v.z(), 3.0);
@@ -232,51 +216,49 @@ mod tests {
 
     #[test]
     fn test_length() {
-        let v = Vector3D { e: [1.0, 2.0, 3.0] };
+        let v = Vector3D::new(1., 2., 3.);
         let r: f32 = 14.0;
         assert_eq!(v.length(), r.sqrt());
     }
 
     #[test]
     fn test_squared_length() {
-        let v = Vector3D { e: [1.0, 2.0, 3.0] };
+        let v = Vector3D::new(1., 2., 3.);
         assert_eq!(v.squared_length(), 14.0);
     }
 
     #[test]
     fn test_make_unit_vector() {
-        let mut v = Vector3D { e: [1.0, 2.0, 3.0] };
+        let mut v = Vector3D::new(1., 2., 3.);
         let v_len = v.length();
         v.make_unit_vector();
         let v2 = Vector3D {
             e: [1.0 / v_len, 2.0 / v_len, 3.0 / v_len],
         };
         assert_eq!(v, v2);
-        let v = Vector3D { e: [1.0, 2.0, 3.0] };
+        let v = Vector3D::new(1., 2., 3.);
         assert_eq!(unit_vector(&v), v2);
     }
 
     #[test]
     fn test_dot() {
-        let v = Vector3D { e: [1.0, 2.0, 3.0] };
+        let v = Vector3D::new(1., 2., 3.);
         assert_eq!(v.dot(&v), 14.0);
     }
 
     #[test]
     fn test_cross() {
-        let v = Vector3D { e: [1.0, 2.0, 3.0] };
-        let v2 = Vector3D { e: [4.0, 5.0, 6.0] };
-        let v3 = Vector3D {
-            e: [-3.0, 6.0, -3.0],
-        };
+        let v = Vector3D::new(1., 2., 3.);
+        let v2 = Vector3D::new(4., 5., 6.);
+        let v3 = Vector3D::new(-3., 6., -3.);
         assert_eq!(v.cross(&v2), v3);
     }
 
     #[test]
     fn test_addition() {
-        let mut v = Vector3D { e: [1.0, 2.0, 3.0] };
-        let v2 = Vector3D { e: [4.0, 5.0, 6.0] };
-        let v3 = Vector3D { e: [5.0, 7.0, 9.0] };
+        let mut v = Vector3D::new(1., 2., 3.);
+        let v2 = Vector3D::new(4., 5., 6.);
+        let v3 = Vector3D::new(5., 7., 9.);
         assert_eq!(v + v2, v3);
         v += v2;
         assert_eq!(v, v3);
@@ -284,11 +266,9 @@ mod tests {
 
     #[test]
     fn test_subtraction() {
-        let mut v = Vector3D { e: [1.0, 2.0, 3.0] };
-        let v2 = Vector3D { e: [4.0, 5.0, 6.0] };
-        let v3 = Vector3D {
-            e: [-3.0, -3.0, -3.0],
-        };
+        let mut v = Vector3D::new(1., 2., 3.);
+        let v2 = Vector3D::new(4., 5., 6.);
+        let v3 = Vector3D::new(-3., -3., -3.);
         assert_eq!(v - v2, v3);
         v -= v2;
         assert_eq!(v, v3);
@@ -296,38 +276,32 @@ mod tests {
 
     #[test]
     fn test_multiplication() {
-        let mut v = Vector3D { e: [1.0, 2.0, 3.0] };
-        let v2 = Vector3D { e: [4.0, 5.0, 6.0] };
-        let v3 = Vector3D {
-            e: [4.0, 10.0, 18.0],
-        };
+        let mut v = Vector3D::new(1., 2., 3.);
+        let v2 = Vector3D::new(4., 5., 6.);
+        let v3 = Vector3D::new(4., 10., 18.);
         let k = 10.0;
-        let v4 = Vector3D {
-            e: [10.0, 20.0, 30.0],
-        };
+        let v4 = Vector3D::new(10., 20., 30.);
         assert_eq!(v * v2, v3);
         assert_eq!(v * k, v4);
         v *= v2;
         assert_eq!(v, v3);
-        let mut v = Vector3D { e: [1.0, 2.0, 3.0] };
+        v = Vector3D::new(1., 2., 3.);
         v *= k;
         assert_eq!(v, v4);
     }
 
     #[test]
     fn test_division() {
-        let mut v = Vector3D { e: [1.0, 2.0, 3.0] };
-        let v2 = Vector3D { e: [4.0, 5.0, 6.0] };
-        let v3 = Vector3D {
-            e: [0.25, 2.0 / 5.0, 3.0 / 6.0],
-        };
+        let mut v = Vector3D::new(1., 2., 3.);
+        let v2 = Vector3D::new(4., 5., 6.);
+        let v3 = Vector3D::new(0.25, 2. / 5., 3. / 6.);
         let k = 10.0;
-        let v4 = Vector3D { e: [0.1, 0.2, 0.3] };
+        let v4 = Vector3D::new(0.1, 0.2, 0.3);
         assert_eq!(v / v2, v3);
         assert_eq!(v / k, v4);
         v /= v2;
         assert_eq!(v, v3);
-        let mut v = Vector3D { e: [1.0, 2.0, 3.0] };
+        let mut v = Vector3D::new(1., 2., 3.);
         v /= k;
         assert_eq!(v, v4);
     }

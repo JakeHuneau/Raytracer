@@ -33,8 +33,8 @@ mod tests {
 
     #[test]
     fn test_constructor() {
-        let v1 = Vector3D { e: [1.0, 1.0, 1.0] };
-        let v2 = Vector3D { e: [2.0, 2.0, 2.0] };
+        let v1 = Vector3D::new(1., 1., 1.);
+        let v2 = Vector3D::new(2., 2., 2.);
         let ray = Ray::new(&v1, &v2);
         assert_eq!(ray.origin(), v1);
         assert_eq!(ray.direction(), v2);
@@ -42,10 +42,10 @@ mod tests {
 
     #[test]
     fn test_point_at_parameter() {
-        let v1 = Vector3D { e: [1.0, 1.0, 1.0] };
-        let v2 = Vector3D { e: [2.0, 2.0, 2.0] };
+        let v1 = Vector3D::new(1., 1., 1.);
+        let v2 = Vector3D::new(2., 2., 2.);
         let ray = Ray::new(&v1, &v2);
-        let v3 = Vector3D { e: [3.0, 3.0, 3.0] };
+        let v3 = Vector3D::new(3., 3., 3.);
         assert_eq!(ray.point_at_parameter(1.0), v3);
     }
 }
