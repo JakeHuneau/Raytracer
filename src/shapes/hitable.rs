@@ -1,3 +1,4 @@
+use crate::util::material::Material;
 use crate::util::ray::Ray;
 use crate::util::vector3d::Vector3D;
 
@@ -6,14 +7,16 @@ pub struct HitRecord {
     pub t: f32,
     pub p: Vector3D,
     pub normal: Vector3D,
+    pub material: Box<Material>,
 }
 
 impl HitRecord {
-    pub fn new() -> Self {
+    pub fn new(m: Box<Material>) -> Self {
         Self {
             t: 0.,
             p: Vector3D::new(0., 0., 0.),
             normal: Vector3D::new(0., 0., 0.),
+            material: m,
         }
     }
 }
@@ -34,7 +37,7 @@ impl HitableList {
 
 impl Hitable for HitableList {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::new();
+        let mut temp_rec = HitRecord::new(rec.material.clone());
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
         for h in self.list.iter() {
