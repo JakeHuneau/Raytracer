@@ -12,7 +12,7 @@ pub trait Material {
         attenuation: &mut Vector3D,
         scattered: &mut Ray,
     ) -> bool;
-    fn box_clone(&self) -> Box<Material>;
+    fn box_clone(&self) -> Box<dyn Material>;
 }
 
 #[derive(Clone)]
@@ -20,8 +20,8 @@ pub struct DummyMat {
     pub albedo: Vector3D,
 }
 
-impl Clone for Box<Material> {
-    fn clone(&self) -> Box<Material> {
+impl Clone for Box<dyn Material> {
+    fn clone(&self) -> Box<dyn Material> {
         self.box_clone()
     }
 }
@@ -45,7 +45,7 @@ impl Material for DummyMat {
     ) -> bool {
         true
     }
-    fn box_clone(&self) -> Box<Material> {
+    fn box_clone(&self) -> Box<dyn Material> {
         Box::new((*self).clone())
     }
 }
@@ -75,7 +75,7 @@ impl Material for Lambertian {
         *attenuation = self.albedo.clone();
         true
     }
-    fn box_clone(&self) -> Box<Material> {
+    fn box_clone(&self) -> Box<dyn Material> {
         Box::new((*self).clone())
     }
 }
@@ -109,7 +109,7 @@ impl Material for Metal {
         *attenuation = self.albedo.clone();
         scattered.direction().dot(&rec.normal) > 0.
     }
-    fn box_clone(&self) -> Box<Material> {
+    fn box_clone(&self) -> Box<dyn Material> {
         Box::new((*self).clone())
     }
 }
@@ -174,7 +174,7 @@ impl Material for Dialectric {
         true
     }
 
-    fn box_clone(&self) -> Box<Material> {
+    fn box_clone(&self) -> Box<dyn Material> {
         Box::new((*self).clone())
     }
 }

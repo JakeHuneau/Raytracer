@@ -7,11 +7,11 @@ pub struct HitRecord {
     pub t: f32,
     pub p: Vector3D,
     pub normal: Vector3D,
-    pub material: Box<Material>,
+    pub material: Box<dyn Material>,
 }
 
 impl HitRecord {
-    pub fn new(m: Box<Material>) -> Self {
+    pub fn new(m: Box<dyn Material>) -> Self {
         Self {
             t: 0.,
             p: Vector3D::new(0., 0., 0.),
@@ -26,11 +26,11 @@ pub trait Hitable {
 }
 
 pub struct HitableList {
-    pub list: Vec<Box<Hitable>>,
+    pub list: Vec<Box<dyn Hitable>>,
 }
 
 impl HitableList {
-    pub fn new(hitable: Vec<Box<Hitable>>) -> Self {
+    pub fn new(hitable: Vec<Box<dyn Hitable>>) -> Self {
         Self { list: hitable }
     }
 }

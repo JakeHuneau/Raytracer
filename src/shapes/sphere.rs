@@ -7,11 +7,11 @@ use crate::util::vector3d::Vector3D;
 pub struct Sphere {
     pub center: Vector3D,
     radius: f32,
-    material: Box<Material>,
+    material: Box<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vector3D, radius: f32, m: Box<Material>) -> Self {
+    pub fn new(center: Vector3D, radius: f32, m: Box<dyn Material>) -> Self {
         Self {
             center: center,
             radius: radius,
