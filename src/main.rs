@@ -193,7 +193,6 @@ fn main() {
     }
 
     for j in (0..ppm.height).rev() {
-        println!("Row {}", j);
         for i in 0..ppm.width {
             let mut col = Vector3D::new(0., 0., 0.);
             for cnt in 0..ns {
