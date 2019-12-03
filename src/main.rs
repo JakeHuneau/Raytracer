@@ -155,8 +155,8 @@ fn exec_worker(
 fn main() {
     let start = SystemTime::now();
 
-    let nx = 1000;
-    let ny = 500;
+    let nx = 1200;
+    let ny = 750;
     let ns = 100;
 
     let filename = "out.ppm";
@@ -193,6 +193,7 @@ fn main() {
     }
 
     for j in (0..ppm.height).rev() {
+        println!("{}% in {} ms", 100. * (1. - j as f32 / ppm.height as f32), start.elapsed().unwrap().as_millis());
         for i in 0..ppm.width {
             let mut col = Vector3D::new(0., 0., 0.);
             for cnt in 0..ns {
