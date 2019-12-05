@@ -29,6 +29,9 @@ pub struct HitableList {
     pub list: Vec<Box<dyn Hitable>>,
 }
 
+unsafe impl Sync for HitableList {}
+unsafe impl Send for HitableList {}
+
 impl HitableList {
     pub fn new(hitable: Vec<Box<dyn Hitable>>) -> Self {
         Self { list: hitable }

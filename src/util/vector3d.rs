@@ -1,4 +1,5 @@
 use std::fmt;
+use std::iter::Sum;
 use std::ops::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -72,6 +73,15 @@ impl Add for Vector3D {
             self.e[1] + v2.e[1],
             self.e[2] + v2.e[2],
         )
+    }
+}
+
+impl Sum for Vector3D {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        iter.fold(Self { e: [0., 0., 0.] }, |a, b| a + b)
     }
 }
 
