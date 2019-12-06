@@ -1,7 +1,7 @@
 extern crate rand;
 extern crate rayon;
 
-use self::rand::Rng;
+use self::rand::{thread_rng, Rng};
 use rayon::prelude::*;
 
 use std::env;
@@ -11,82 +11,85 @@ use std::time::SystemTime;
 use raytrace::shapes::hitable::{HitRecord, Hitable, HitableList};
 use raytrace::shapes::sphere::Sphere;
 use raytrace::util::camera::Camera;
-use raytrace::util::material::{Dialectric, DummyMat, Lambertian, Metal};
+use raytrace::util::material::Material;
 use raytrace::util::ppm::PPM;
-use raytrace::util::random::rand_num;
+
 use raytrace::util::ray::Ray;
 use raytrace::util::vector3d::{unit_vector, Vector3D};
 
-#[macro_export]
-macro_rules! make_sphere {
-    ( $m:ident, $x:expr, $y:expr, $r:expr ) => {{
-        Box::new(Sphere::new($y, $r, Box::new($m::new($x))))
-    }};
-    ( $m:ident, $x:expr, $f:expr, $y:expr, $r:expr ) => {{
-        Box::new(Sphere::new($y, $r, Box::new($m::new($x, $f))))
-    }};
-}
-
 pub fn random_scene() -> HitableList {
+    let mut rng = thread_rng();
     let mut list = HitableList::new(vec![]);
-    list.list.push(make_sphere!(
-        Lambertian,
-        Vector3D::new(0.5, 0.5, 0.5),
+    list.list.push(Box::new(Sphere::new(
         Vector3D::new(0., -1000., 0.),
-        1000.
-    ));
-    list.list
-        .push(make_sphere!(Dialectric, 1.5, Vector3D::new(0., 1., 0.), 1.));
-    list.list.push(make_sphere!(
-        Lambertian,
-        Vector3D::new(0.4, 0.2, 0.1),
+        1000.,
+        Material::Lambertian {
+            albedo: Vector3D::new(0.5, 0.5, 0.5),
+        },
+    )));
+    list.list.push(Box::new(Sphere::new(
+        Vector3D::new(0., 1., 0.),
+        1.,
+        Material::Dialectric { ref_ind: 1.5 },
+    )));
+    list.list.push(Box::new(Sphere::new(
         Vector3D::new(-4., 1., 0.),
-        1.
-    ));
-    list.list.push(make_sphere!(
-        Metal,
-        Vector3D::new(0.7, 0.6, 0.5),
-        0.0,
+        1.,
+        Material::Lambertian {
+            albedo: Vector3D::new(0.4, 0.2, 0.1),
+        },
+    )));
+    list.list.push(Box::new(Sphere::new(
         Vector3D::new(4., 1., 0.),
-        1.
-    ));
+        1.,
+        Material::Metal {
+            albedo: Vector3D::new(0.7, 0.6, 0.5),
+            fuzziness: 0.,
+        },
+    )));
     for a in -11..10 {
         for b in -11..10 {
-            let choose_mat = rand_num();
+            let choose_mat = rng.gen::<f32>();
             let center = Vector3D::new(
-                a as f32 + 0.9 * rand_num(),
+                a as f32 + 0.9 * rng.gen::<f32>(),
                 0.2,
-                b as f32 + 0.9 * rand_num(),
+                b as f32 + 0.9 * rng.gen::<f32>(),
             );
             if (center - Vector3D::new(4., 0.2, 0.)).length() > 0.9 {
                 match choose_mat {
                     choose_mat if choose_mat < 0.8 => {
-                        list.list.push(make_sphere!(
-                            Lambertian,
-                            Vector3D::new(
-                                rand_num() * rand_num(),
-                                rand_num() * rand_num(),
-                                rand_num() * rand_num()
-                            ),
+                        list.list.push(Box::new(Sphere::new(
                             center,
-                            0.2
-                        ));
+                            0.2,
+                            Material::Lambertian {
+                                albedo: Vector3D::new(
+                                    rng.gen::<f32>() * rng.gen::<f32>(),
+                                    rng.gen::<f32>() * rng.gen::<f32>(),
+                                    rng.gen::<f32>() * rng.gen::<f32>(),
+                                ),
+                            },
+                        )));
                     }
                     choose_mat if choose_mat < 0.95 => {
-                        list.list.push(make_sphere!(
-                            Metal,
-                            Vector3D::new(
-                                0.5 * (1. + rand_num()),
-                                0.5 * (1. + rand_num()),
-                                0.5 * (1. + rand_num())
-                            ),
-                            0.5 * rand_num(),
+                        list.list.push(Box::new(Sphere::new(
                             center,
-                            0.2
-                        ));
+                            0.2,
+                            Material::Metal {
+                                albedo: Vector3D::new(
+                                    0.5 * (1. + rng.gen::<f32>()),
+                                    0.5 * (1. + rng.gen::<f32>()),
+                                    0.5 * (1. + rng.gen::<f32>()),
+                                ),
+                                fuzziness: 0.5 * rng.gen::<f32>(),
+                            },
+                        )));
                     }
                     _ => {
-                        list.list.push(make_sphere!(Dialectric, 1.5, center, 0.2));
+                        list.list.push(Box::new(Sphere::new(
+                            center,
+                            0.2,
+                            Material::Dialectric { ref_ind: 1.5 },
+                        )));
                     }
                 }
             }
@@ -96,7 +99,9 @@ pub fn random_scene() -> HitableList {
 }
 
 pub fn color(r: &Ray, world: &HitableList, depth: i32) -> Vector3D {
-    let mut rec = HitRecord::new(Box::new(DummyMat::new()));
+    let mut rec = HitRecord::new(Material::DummyMat {
+        albedo: Vector3D::new(0., 0., 0.),
+    });
     match world.hit(&r, 0.001, f32::MAX, &mut rec) {
         true => {
             let v1 = Vector3D::new(0., 0., 0.);
@@ -106,7 +111,6 @@ pub fn color(r: &Ray, world: &HitableList, depth: i32) -> Vector3D {
             match depth < 50
                 && rec
                     .material
-                    .as_ref()
                     .scatter(r, &rec, &mut attenuation, &mut scattered)
             {
                 true => attenuation * color(&scattered, world, depth + 1),
@@ -141,7 +145,7 @@ pub fn calculate_pixel(
         })
         .sum();
     col /= ns as f32;
-    Vector3D::new(col.r().sqrt(), col.g().sqrt(), col.b().sqrt());
+    col = Vector3D::new(col.r().sqrt(), col.g().sqrt(), col.b().sqrt());
     [
         (max_color as f32 * col.e[0]) as u32,
         (max_color as f32 * col.e[1]) as u32,
@@ -177,7 +181,7 @@ fn main() {
     );
 
     for j in (0..ny).rev() {
-        println!("Starting row {}", j);
+        println!("Starting row {} at {} ms", j, start.elapsed().unwrap().as_millis());
         let pixels: Vec<[u32; 3]> = (0..nx)
             .into_par_iter()
             .map(|i| calculate_pixel(ns, &cam, &world, i, j, nx, ny, max_color))

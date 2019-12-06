@@ -7,11 +7,11 @@ pub struct HitRecord {
     pub t: f32,
     pub p: Vector3D,
     pub normal: Vector3D,
-    pub material: Box<dyn Material>,
+    pub material: Material,
 }
 
 impl HitRecord {
-    pub fn new(m: Box<dyn Material>) -> Self {
+    pub fn new(m: Material) -> Self {
         Self {
             t: 0.,
             p: Vector3D::new(0., 0., 0.),
