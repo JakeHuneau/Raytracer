@@ -1,7 +1,11 @@
+extern crate rand;
+extern crate rayon;
+
+use self::rand::Rng;
+use rayon::prelude::*;
+
+use std::env;
 use std::f32;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::Arc;
-use std::thread;
 use std::time::SystemTime;
 
 use raytrace::shapes::hitable::{HitRecord, Hitable, HitableList};
@@ -12,8 +16,6 @@ use raytrace::util::ppm::PPM;
 use raytrace::util::random::rand_num;
 use raytrace::util::ray::Ray;
 use raytrace::util::vector3d::{unit_vector, Vector3D};
-
-const NUM_WORKERS: usize = 4;
 
 #[macro_export]
 macro_rules! make_sphere {
@@ -93,7 +95,7 @@ pub fn random_scene() -> HitableList {
     list
 }
 
-pub fn color(r: &Ray, world: &Arc<HitableList>, depth: i32) -> Vector3D {
+pub fn color(r: &Ray, world: &HitableList, depth: i32) -> Vector3D {
     let mut rec = HitRecord::new(Box::new(DummyMat::new()));
     match world.hit(&r, 0.001, f32::MAX, &mut rec) {
         true => {
@@ -119,48 +121,46 @@ pub fn color(r: &Ray, world: &Arc<HitableList>, depth: i32) -> Vector3D {
     }
 }
 
-fn get_color(
-    i: f32,
-    j: f32,
-    nx: f32,
-    ny: f32,
-    cam: &Arc<Camera>,
-    world: &Arc<HitableList>,
-) -> Vector3D {
-    let u = (i as f32 + rand_num()) / (nx as f32);
-    let v = (j as f32 + rand_num()) / (ny as f32);
-    let r = cam.get_ray(u, v);
-    color(&r, world, 0)
-}
-
-fn exec_worker(
-    cam: &Arc<Camera>,
-    world: &Arc<HitableList>,
-    rx: Receiver<Option<(f32, f32, f32, f32)>>,
-    cx: Sender<Option<Vector3D>>,
-) {
-    loop {
-        match rx.recv().unwrap() {
-            Some(arg) => {
-                let r = get_color(arg.0, arg.1, arg.2, arg.3, cam, world);
-                cx.send(Some(r)).unwrap();
-            }
-            None => {
-                return;
-            }
-        }
-    }
+pub fn calculate_pixel(
+    ns: u32,
+    cam: &Camera,
+    world: &HitableList,
+    i: u32,
+    j: u32,
+    nx: u32,
+    ny: u32,
+    max_color: u32,
+) -> [u32; 3] {
+    let mut col: Vector3D = (0..ns)
+        .into_par_iter()
+        .map_init(rand::thread_rng, |rng, _| -> Vector3D {
+            let u = (i as f32 + rng.gen::<f32>()) / (nx as f32);
+            let v = (j as f32 + rng.gen::<f32>()) / (ny as f32);
+            let r = cam.get_ray(u, v);
+            color(&r, &world, 0)
+        })
+        .sum();
+    col /= ns as f32;
+    Vector3D::new(col.r().sqrt(), col.g().sqrt(), col.b().sqrt());
+    [
+        (max_color as f32 * col.e[0]) as u32,
+        (max_color as f32 * col.e[1]) as u32,
+        (max_color as f32 * col.e[2]) as u32,
+    ]
 }
 
 fn main() {
     let start = SystemTime::now();
 
-    let nx = 1200;
-    let ny = 750;
-    let ns = 100;
+    let args: Vec<String> = env::args().collect();
+
+    let nx = args[1].parse::<u32>().unwrap(); // image width
+    let ny = args[2].parse::<u32>().unwrap(); // image height
+    let ns = args[3].parse::<u32>().unwrap(); // antialiasing samples per pixel
+    let max_color = 256;
 
     let filename = "out.ppm";
-    let mut ppm = PPM::new(&filename, ny, nx, 256);
+    let mut ppm = PPM::new(&filename, ny, nx, max_color);
 
     let world = random_scene();
 
@@ -175,59 +175,17 @@ fn main() {
         0.1,
         10.,
     );
-    let mut workers = vec![];
-    let mut handles = vec![];
-    let world_arc = Arc::new(world);
-    let cam_arc = Arc::new(cam);
-    let (calc_tx, calc_rx) = channel::<Option<Vector3D>>();
 
-    for _ in 0..NUM_WORKERS {
-        let world = world_arc.clone();
-        let cam = cam_arc.clone();
-        let (worker_tx, worker_rx) = channel::<Option<(f32, f32, f32, f32)>>();
-        workers.push(worker_tx.clone());
-        let c_tx = calc_tx.clone();
-        handles.push(thread::spawn(move || {
-            exec_worker(&cam, &world, worker_rx, c_tx)
-        }));
-    }
+    for j in (0..ny).rev() {
+        println!("Starting row {}", j);
+        let pixels: Vec<[u32; 3]> = (0..nx)
+            .into_par_iter()
+            .map(|i| calculate_pixel(ns, &cam, &world, i, j, nx, ny, max_color))
+            .collect();
 
-    for j in (0..ppm.height).rev() {
-        println!("{}% in {} ms", 100. * (1. - j as f32 / ppm.height as f32), start.elapsed().unwrap().as_millis());
-        for i in 0..ppm.width {
-            let mut col = Vector3D::new(0., 0., 0.);
-            for cnt in 0..ns {
-                let offset = cnt % NUM_WORKERS;
-                let req = workers[offset].clone();
-                req.send(Some((i as f32, j as f32, nx as f32, ny as f32)))
-                    .unwrap();
-            }
-            for _ in 0..ns {
-                match calc_rx.recv().unwrap() {
-                    Some(ret) => col += ret,
-                    None => break,
-                }
-            }
-            col /= ns as f32;
-            col = Vector3D::new(col.r().sqrt(), col.g().sqrt(), col.b().sqrt());
-
-            let v1 = [
-                (ppm.max as f32 * col.e[0]) as u32,
-                (ppm.max as f32 * col.e[1]) as u32,
-                (ppm.max as f32 * col.e[2]) as u32,
-            ];
-            ppm.write_row(&v1);
+        for pixel in pixels {
+            ppm.write_row(pixel);
         }
     }
-
-    for worker in workers {
-        let req = worker.clone();
-        req.send(None).unwrap();
-    }
-
-    for handle in handles {
-        handle.join().unwrap();
-    }
-
     println!("Finished in {} ms", start.elapsed().unwrap().as_millis());
 }

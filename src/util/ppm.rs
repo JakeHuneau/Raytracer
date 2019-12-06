@@ -20,7 +20,7 @@ impl PPM {
         }
     }
 
-    pub fn write_row(&mut self, data: &[u32; 3]) {
+    pub fn write_row(&mut self, data: [u32; 3]) {
         write!(self.file, "{} {} {}\n", data[0], data[1], data[2]).unwrap();
     }
 }
