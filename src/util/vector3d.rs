@@ -206,7 +206,7 @@ impl fmt::Display for Vector3D {
 }
 
 pub fn unit_vector(v: &Vector3D) -> Vector3D {
-    *v / v.length()
+    v.clone() / v.length()
 }
 
 #[cfg(test)]
