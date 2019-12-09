@@ -51,11 +51,11 @@ impl Vector3D {
         self.e[2] *= k;
     }
 
-    pub fn dot(&self, v2: &Vector3D) -> f32 {
+    pub fn dot(&self, v2: Vector3D) -> f32 {
         self.e[0] * v2.e[0] + self.e[1] * v2.e[1] + self.e[2] * v2.e[2]
     }
 
-    pub fn cross(&self, v2: &Vector3D) -> Self {
+    pub fn cross(&self, v2: Vector3D) -> Self {
         Self::new(
             self.e[1] * v2.e[2] - self.e[2] * v2.e[1],
             -(self.e[0] * v2.e[2] - self.e[2] * v2.e[0]),
@@ -205,8 +205,8 @@ impl fmt::Display for Vector3D {
     }
 }
 
-pub fn unit_vector(v: &Vector3D) -> Vector3D {
-    *v / v.length()
+pub fn unit_vector(v: Vector3D) -> Vector3D {
+    v / v.length()
 }
 
 #[cfg(test)]
@@ -247,13 +247,13 @@ mod tests {
         };
         assert_eq!(v, v2);
         let v = Vector3D::new(1., 2., 3.);
-        assert_eq!(unit_vector(&v), v2);
+        assert_eq!(unit_vector(v), v2);
     }
 
     #[test]
     fn test_dot() {
         let v = Vector3D::new(1., 2., 3.);
-        assert_eq!(v.dot(&v), 14.0);
+        assert_eq!(v.dot(v), 14.0);
     }
 
     #[test]
@@ -261,7 +261,7 @@ mod tests {
         let v = Vector3D::new(1., 2., 3.);
         let v2 = Vector3D::new(4., 5., 6.);
         let v3 = Vector3D::new(-3., 6., -3.);
-        assert_eq!(v.cross(&v2), v3);
+        assert_eq!(v.cross(v2), v3);
     }
 
     #[test]

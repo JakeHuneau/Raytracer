@@ -16,8 +16,8 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(
-        lookfrom: &Vector3D,
-        lookat: &Vector3D,
+        lookfrom: Vector3D,
+        lookat: Vector3D,
         vup: Vector3D,
         vfov: f32,
         aspect: f32,
@@ -27,12 +27,12 @@ impl Camera {
         let theta = vfov * PI / 180.;
         let half_height = (theta / 2.).tan();
         let half_width = aspect * half_height;
-        let w = unit_vector(&(lookfrom.clone() - lookat.clone()));
-        let u = unit_vector(&(vup.cross(&w)));
-        let v = w.cross(&u);
+        let w = unit_vector(lookfrom - lookat);
+        let u = unit_vector(vup.cross(w));
+        let v = w.cross(u);
         Self {
-            origin: lookfrom.clone(),
-            lower_left_corner: lookfrom.clone()
+            origin: lookfrom,
+            lower_left_corner: lookfrom
                 - u * half_width * focus_dist
                 - v * half_height * focus_dist
                 - w * focus_dist,
@@ -46,21 +46,17 @@ impl Camera {
 
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let rd = random_in_unit_disk() * self.lens_radius;
-        let offset = self.u.clone() * rd.x() + self.v.clone() * rd.y();
-        let dest = self.lower_left_corner.clone()
-            + self.horizontal.clone() * u
-            + self.vertical.clone() * v
-            - self.origin.clone()
-            - offset;
-        Ray::new(&(self.origin + offset), &dest)
+        let offset = self.u * rd.x() + self.v * rd.y();
+        let dest =
+            self.lower_left_corner + self.horizontal * u + self.vertical * v - self.origin - offset;
+        Ray::new(self.origin + offset, dest)
     }
 }
 
 pub fn random_in_unit_disk() -> Vector3D {
-    let mut p: Vector3D;
     loop {
-        p = Vector3D::new(rand_num(), rand_num(), 0.) * 2. - Vector3D::new(1., 1., 0.);
-        if p.dot(&p) < 1. {
+        let p = Vector3D::new(rand_num(), rand_num(), 0.) * 2. - Vector3D::new(1., 1., 0.);
+        if p.dot(p) < 1. {
             return p;
         }
     }
