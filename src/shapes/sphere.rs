@@ -23,9 +23,9 @@ impl Sphere {
 impl Hitable for Sphere {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let oc = r.origin().clone() - self.center.clone();
-        let a = r.direction().dot(&r.direction());
-        let b = oc.dot(&r.direction());
-        let c = oc.dot(&oc) - self.radius * self.radius;
+        let a = r.direction().dot(r.direction());
+        let b = oc.dot(r.direction());
+        let c = oc.dot(oc) - self.radius * self.radius;
         let discriminant = b * b - a * c;
         let res = discriminant > 0.;
         match res {

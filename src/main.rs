@@ -1,10 +1,9 @@
+extern crate png;
 extern crate rand;
 extern crate rayon;
-extern crate png;
 
 use std::fs::File;
 use std::io::BufWriter;
-//use png::HasParameters;
 
 use self::rand::{thread_rng, Rng};
 use rayon::prelude::*;
@@ -17,7 +16,6 @@ use raytrace::shapes::hitable::{HitRecord, Hitable, HitableList};
 use raytrace::shapes::sphere::Sphere;
 use raytrace::util::camera::Camera;
 use raytrace::util::material::Material;
-//use raytrace::util::ppm::PPM;
 
 use raytrace::util::ray::Ray;
 use raytrace::util::vector3d::{unit_vector, Vector3D};
@@ -111,7 +109,7 @@ pub fn color(r: &Ray, world: &HitableList, depth: i32) -> Vector3D {
         true => {
             let v1 = Vector3D::new(0., 0., 0.);
             let v2 = Vector3D::new(0., 0., 0.);
-            let mut scattered = Ray::new(&v1, &v2);
+            let mut scattered = Ray::new(v1, v2);
             let mut attenuation = Vector3D::new(0., 0., 0.);
             match depth < 50
                 && rec
@@ -123,9 +121,9 @@ pub fn color(r: &Ray, world: &HitableList, depth: i32) -> Vector3D {
             }
         }
         false => {
-            let unit_direction = unit_vector(&r.direction());
+            let unit_direction = unit_vector(r.direction());
             let t = 0.5 * (unit_direction.y() + 1.);
-            Vector3D::new(1., 1., 1.) * (1. - t) + Vector3D::new(0.7, 0.5, 1.) * t
+            Vector3D::new(1., 1., 1.) * (1. - t) + Vector3D::new(0.5, 0.7, 1.) * t
         }
     }
 }
@@ -138,7 +136,6 @@ pub fn calculate_pixel(
     j: u32,
     nx: u32,
     ny: u32,
-    max_color: u32,
 ) -> [u8; 3] {
     let mut col: Vector3D = (0..ns)
         .into_par_iter()
@@ -151,12 +148,35 @@ pub fn calculate_pixel(
         .sum();
     col /= ns as f32;
     col = Vector3D::new(col.r().sqrt(), col.g().sqrt(), col.b().sqrt());
-    println!("{}", col);
     [
-        (max_color as f32 * col.r()) as u8,
-        (max_color as f32 * col.g()) as u8,
-        (max_color as f32 * col.b()) as u8,
+        (255.99 as f32 * col.r()) as u8,
+        (255.99 as f32 * col.g()) as u8,
+        (255.99 as f32 * col.b()) as u8,
     ]
+}
+
+pub fn render(cam: Camera, world: HitableList, nx: u32, ny: u32, ns: u32) -> Vec<u8> {
+    let mut all_pixels: Vec<u8> = vec![];
+
+    let full_pixels: Vec<Vec<[u8; 3]>> = (0..ny)
+        .into_par_iter()
+        .rev()
+        .map(|j| {
+            let pixels: Vec<[u8; 3]> = (0..nx)
+                .into_par_iter()
+                .map(|i| calculate_pixel(ns, &cam, &world, i, j, nx, ny))
+                .collect();
+            pixels
+        })
+        .collect();
+
+    for inner_pixels in full_pixels {
+        for pixel in inner_pixels {
+            all_pixels.extend_from_slice(&pixel);
+        }
+    }
+
+    all_pixels
 }
 
 fn main() {
@@ -166,8 +186,7 @@ fn main() {
 
     let nx = args[1].parse::<u32>().unwrap(); // image width
     let ny = args[2].parse::<u32>().unwrap(); // image height
-    let ns = args[3].parse::<u32>().unwrap(); // antialiasing samples per pixel
-    let max_color = 256;
+    let ns = args[3].parse::<u32>().unwrap(); // number of samples per pixel (antialiasing)
 
     let filename = "out.png";
     let file = File::create(filename).unwrap();
@@ -177,40 +196,23 @@ fn main() {
     encoder.set_color(png::ColorType::RGB);
     encoder.set_depth(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
-    //let mut ppm = PPM::new(&filename, ny, nx, max_color);
 
     let world = random_scene();
 
     let lookfrom = Vector3D::new(13., 2., 3.);
     let lookat = Vector3D::new(0., 0., -1.);
     let cam = Camera::new(
-        &lookfrom,
-        &lookat,
+        lookfrom,
+        lookat,
         Vector3D::new(0., 1., 0.),
         30.,
         nx as f32 / ny as f32,
         0.1,
-        10.,
+        (lookfrom - Vector3D::new(4., 1., 0.)).length(),
     );
 
-    let mut all_pixels: Vec<u8> = vec![];
+    let pixels = render(cam, world, nx, ny, ns);
 
-    for j in (0..ny).rev() {
-        println!("Starting row {} at {} ms", j, start.elapsed().unwrap().as_millis());
-        let pixels: Vec<[u8; 3]> = (0..nx)
-            .into_par_iter()
-            .map(|i| calculate_pixel(ns, &cam, &world, i, j, nx, ny, max_color))
-            .collect();
-
-        for pixel in pixels {
-            println!("{} {} {}", pixel[0], pixel[1], pixel[2]);
-            all_pixels.extend_from_slice(&pixel);
-            // all_pixels.push(pixel[0]);
-            // all_pixels.push(pixel[1]);
-            // all_pixels.push(pixel[2]);
-            //ppm.write_row(pixel);
-        }
-    }
-    writer.write_image_data(&all_pixels).unwrap();
+    writer.write_image_data(&pixels).unwrap();
     println!("Finished in {} ms", start.elapsed().unwrap().as_millis());
 }
