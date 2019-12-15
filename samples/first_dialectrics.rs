@@ -4,7 +4,7 @@ use std::time::SystemTime;
 use raytrace::shapes::hitable::{HitRecord, Hitable, HitableList};
 use raytrace::shapes::sphere::Sphere;
 use raytrace::util::camera::Camera;
-use raytrace::util::material::{Dialectric, DummyMat, Lambertian, Metal};
+use raytrace::util::material::{Dielectric, DummyMat, Lambertian, Metal};
 use raytrace::util::ppm::PPM;
 use raytrace::util::random::rand_num;
 use raytrace::util::ray::Ray;
@@ -75,8 +75,8 @@ fn main() {
         Vector3D::new(1., 0., -1.),
         0.5
     );
-    let s4 = make_sphere!(Dialectric, 1.5, Vector3D::new(-1., 0., -1.), 0.5);
-    let s5 = make_sphere!(Dialectric, 1.5, Vector3D::new(-1., 0., -1.), -0.45);
+    let s4 = make_sphere!(Dielectric, 1.5, Vector3D::new(-1., 0., -1.), 0.5);
+    let s5 = make_sphere!(Dielectric, 1.5, Vector3D::new(-1., 0., -1.), -0.45);
     let s6 = make_sphere!(
         Lambertian,
         Vector3D::new(0.8, 0.3, 0.3),

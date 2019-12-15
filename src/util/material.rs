@@ -9,7 +9,7 @@ pub enum Material {
     DummyMat { albedo: Vector3D },
     Lambertian { albedo: Vector3D },
     Metal { albedo: Vector3D, fuzziness: f32 },
-    Dialectric { ref_ind: f32 },
+    Dielectric { ref_ind: f32 },
 }
 
 #[allow(unused)]
@@ -37,7 +37,7 @@ impl Material {
                 *attenuation = albedo.clone();
                 scattered.direction().dot(rec.normal) > 0.
             }
-            Material::Dialectric { ref_ind } => {
+            Material::Dielectric { ref_ind } => {
                 let outward_normal: Vector3D;
                 let reflected = reflect(&r_in.direction(), rec.normal);
                 let ni_over_nt: f32;

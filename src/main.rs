@@ -31,7 +31,7 @@ macro_rules! make_sphere {
 }
 
 pub fn random_scene() -> HitableList {
-    let mut rng = thread_rng();
+    let mut rng = thread_rng();  // Make a single rng to pass around
     let mut list = HitableList::new(vec![]);
     list.list.push(make_sphere!(
         Vector3D::new(0., -1000., 0.),
@@ -43,7 +43,7 @@ pub fn random_scene() -> HitableList {
     list.list.push(make_sphere!(
         Vector3D::new(0., 1., 0.),
         1.,
-        Material::Dialectric { ref_ind: 1.5 },
+        Material::Dielectric { ref_ind: 1.5 },
     ));
     list.list.push(make_sphere!(
         Vector3D::new(-4., 1., 0.),
@@ -60,8 +60,8 @@ pub fn random_scene() -> HitableList {
             fuzziness: 0.,
         },
     ));
-    for a in -11..10 {
-        for b in -11..10 {
+    for a in -11..10 {  // x location
+        for b in -11..10 { // y location
             let choose_mat = rng.gen::<f32>();
             let center = Vector3D::new(
                 a as f32 + 0.9 * rng.gen::<f32>(),
@@ -101,7 +101,7 @@ pub fn random_scene() -> HitableList {
                         list.list.push(make_sphere!(
                             center,
                             0.2,
-                            Material::Dialectric { ref_ind: 1.5 },
+                            Material::Dielectric { ref_ind: 1.5 },
                         ));
                     }
                 }
@@ -112,11 +112,12 @@ pub fn random_scene() -> HitableList {
 }
 
 pub fn color(r: &Ray, world: &HitableList, depth: i32) -> Vector3D {
-    let mut rec = HitRecord::new(Material::DummyMat {
+    let mut rec = HitRecord::new(Material::DummyMat {  // Start with an empty material record
         albedo: Vector3D::new(0., 0., 0.),
     });
     match world.hit(r, 0.001, f32::MAX, &mut rec) {
         true => {
+            // Start with empty result
             let v1 = Vector3D::new(0., 0., 0.);
             let v2 = Vector3D::new(0., 0., 0.);
             let mut scattered = Ray::new(v1, v2);
@@ -124,13 +125,13 @@ pub fn color(r: &Ray, world: &HitableList, depth: i32) -> Vector3D {
             match depth < 50
                 && rec
                     .material
-                    .scatter(r, &rec, &mut attenuation, &mut scattered)
+                    .scatter(r, &rec, &mut attenuation, &mut scattered)  // Still scattering
             {
                 true => attenuation * color(&scattered, world, depth + 1),
-                false => Vector3D::new(0., 0., 0.),
+                false => Vector3D::new(0., 0., 0.),  // Black spot
             }
         }
-        false => {
+        false => {  // Return background color
             let unit_direction = unit_vector(r.direction());
             let t = 0.5 * (unit_direction.y() + 1.);
             Vector3D::new(1., 1., 1.) * (1. - t) + Vector3D::new(0.5, 0.7, 1.) * t
@@ -156,7 +157,7 @@ pub fn calculate_pixel(
             color(&r, &world, 0)
         })
         .sum();
-    col /= ns as f32;
+    col /= ns as f32;  // Antialiasing average
     col = Vector3D::new(col.r().sqrt(), col.g().sqrt(), col.b().sqrt());
     [
         (255.99 as f32 * col.r()) as u8,
@@ -196,7 +197,11 @@ fn main() {
 
     let nx = args[1].parse::<u32>().unwrap(); // image width
     let ny = args[2].parse::<u32>().unwrap(); // image height
-    let ns = args[3].parse::<u32>().unwrap(); // number of samples per pixel (antialiasing)
+    let mut ns: u32 = 100; // Default value of 100 otherwise
+    match args.len() { // Check if there is a third argument for antialiasing sample count
+        4 => {ns = args[3].parse::<u32>().unwrap();},
+        _ => (),
+    }
 
     let filename = "out.png";
     let file = File::create(filename).unwrap();
