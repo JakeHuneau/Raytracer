@@ -20,36 +20,46 @@ use raytrace::util::material::Material;
 use raytrace::util::ray::Ray;
 use raytrace::util::vector3d::{unit_vector, Vector3D};
 
+#[macro_export]
+macro_rules! make_sphere {
+    ( $y:expr, $r:expr, $m:expr, ) => {
+        // sphere location, sphere radius, material,
+        {
+            Box::new(Sphere::new($y, $r, $m))
+        }
+    };
+}
+
 pub fn random_scene() -> HitableList {
     let mut rng = thread_rng();
     let mut list = HitableList::new(vec![]);
-    list.list.push(Box::new(Sphere::new(
+    list.list.push(make_sphere!(
         Vector3D::new(0., -1000., 0.),
         1000.,
         Material::Lambertian {
             albedo: Vector3D::new(0.5, 0.5, 0.5),
         },
-    )));
-    list.list.push(Box::new(Sphere::new(
+    ));
+    list.list.push(make_sphere!(
         Vector3D::new(0., 1., 0.),
         1.,
         Material::Dialectric { ref_ind: 1.5 },
-    )));
-    list.list.push(Box::new(Sphere::new(
+    ));
+    list.list.push(make_sphere!(
         Vector3D::new(-4., 1., 0.),
         1.,
         Material::Lambertian {
             albedo: Vector3D::new(0.4, 0.2, 0.1),
         },
-    )));
-    list.list.push(Box::new(Sphere::new(
+    ));
+    list.list.push(make_sphere!(
         Vector3D::new(4., 1., 0.),
         1.,
         Material::Metal {
             albedo: Vector3D::new(0.7, 0.6, 0.5),
             fuzziness: 0.,
         },
-    )));
+    ));
     for a in -11..10 {
         for b in -11..10 {
             let choose_mat = rng.gen::<f32>();
@@ -61,7 +71,7 @@ pub fn random_scene() -> HitableList {
             if (center - Vector3D::new(4., 0.2, 0.)).length() > 0.9 {
                 match choose_mat {
                     choose_mat if choose_mat < 0.8 => {
-                        list.list.push(Box::new(Sphere::new(
+                        list.list.push(make_sphere!(
                             center,
                             0.2,
                             Material::Lambertian {
@@ -71,10 +81,10 @@ pub fn random_scene() -> HitableList {
                                     rng.gen::<f32>() * rng.gen::<f32>(),
                                 ),
                             },
-                        )));
+                        ));
                     }
                     choose_mat if choose_mat < 0.95 => {
-                        list.list.push(Box::new(Sphere::new(
+                        list.list.push(make_sphere!(
                             center,
                             0.2,
                             Material::Metal {
@@ -85,14 +95,14 @@ pub fn random_scene() -> HitableList {
                                 ),
                                 fuzziness: 0.5 * rng.gen::<f32>(),
                             },
-                        )));
+                        ));
                     }
                     _ => {
-                        list.list.push(Box::new(Sphere::new(
+                        list.list.push(make_sphere!(
                             center,
                             0.2,
                             Material::Dialectric { ref_ind: 1.5 },
-                        )));
+                        ));
                     }
                 }
             }
